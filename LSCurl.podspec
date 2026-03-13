@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'LSCurl'
-  s.version          = '1.0.3'
+  s.version          = '8.17.0'
   s.summary          = 'Pre-compiled libcurl + nghttp2 xcframeworks for iOS/tvOS/macOS/Catalyst'
   s.description      = <<-DESC
     Pre-compiled libcurl and nghttp2 static xcframeworks built from github.com/jasonacox/Build-OpenSSL-cURL.
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
 
   s.libraries = ['z']
 
-  s.dependency 'LSOpenSSL', '~> 1.0.3'
+  s.dependency 'LSOpenSSL', '~> 3.0'
 
   s.pod_target_xcconfig = {
     'OTHER_LDFLAGS' => '-ObjC',

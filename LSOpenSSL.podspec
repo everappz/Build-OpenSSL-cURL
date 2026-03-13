@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'LSOpenSSL'
-  s.version          = '1.0.3'
+  s.version          = '3.0.18'
   s.summary          = 'Pre-compiled OpenSSL (libssl + libcrypto) xcframeworks for iOS/tvOS/macOS/Catalyst'
   s.description      = <<-DESC
     Pre-compiled OpenSSL static xcframeworks built from github.com/jasonacox/Build-OpenSSL-cURL.
