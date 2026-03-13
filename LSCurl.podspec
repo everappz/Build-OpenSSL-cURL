@@ -13,8 +13,11 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'MIT', :text => 'curl is licensed under the MIT/X derivate license' }
   s.author           = { 'Daniel Stenberg' => 'https://curl.se', 'Jason Cox' => 'https://github.com/jasonacox' }
 
+  archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0'
+  archive_url  = "https://github.com/jasonacox/Build-OpenSSL-cURL/releases/download/1.0.3/#{archive_name}.tgz"
+
   s.source = {
-    :http => 'https://github.com/jasonacox/Build-OpenSSL-cURL/releases/download/1.0.3/libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0.tgz',
+    :http => archive_url,
     :type => 'tgz',
   }
 
@@ -22,18 +25,22 @@ Pod::Spec.new do |s|
   s.osx.deployment_target    = '10.15'
   s.tvos.deployment_target   = '15.0'
 
-  # The archive extracts to: libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/
-  # xcframeworks are in: libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/xcframework/
-  # headers are in:      libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include/curl/
+  s.prepare_command = <<-SCRIPT
+    if [ ! -d "#{archive_name}/xcframework" ]; then
+      curl -fsSL "#{archive_url}" -o archive.tgz
+      tar xzf archive.tgz
+      rm -f archive.tgz
+    fi
+  SCRIPT
 
   s.vendored_frameworks = [
-    'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/xcframework/libcurl.xcframework',
-    'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/xcframework/libnghttp2.xcframework',
+    "#{archive_name}/xcframework/libcurl.xcframework",
+    "#{archive_name}/xcframework/libnghttp2.xcframework",
   ]
 
-  s.source_files        = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include/curl/**/*.h'
-  s.public_header_files = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include/curl/**/*.h'
-  s.header_mappings_dir = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include'
+  s.source_files        = "#{archive_name}/include/curl/**/*.h"
+  s.public_header_files = "#{archive_name}/include/curl/**/*.h"
+  s.header_mappings_dir = "#{archive_name}/include"
 
   s.libraries = ['z']
 
