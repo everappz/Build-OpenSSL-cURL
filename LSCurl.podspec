@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
 
   s.libraries = ['z']
 
-  s.dependency 'LSOpenSSL', '~> 3.0'
+  s.dependency 'LSOpenSSL', '~> 1.0.3'
 
   s.pod_target_xcconfig = {
     'OTHER_LDFLAGS' => '-ObjC',
