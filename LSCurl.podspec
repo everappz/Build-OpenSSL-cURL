@@ -1,20 +1,19 @@
 Pod::Spec.new do |s|
   s.name             = 'LSCurl'
   s.version          = '8.17.0'
-  s.summary          = 'Pre-compiled libcurl + nghttp2 xcframeworks for iOS/tvOS/macOS/Catalyst'
+  s.summary          = 'Pre-compiled libcurl + nghttp2 + libssh2 xcframeworks for iOS/tvOS/macOS/Catalyst'
   s.description      = <<-DESC
-    Pre-compiled libcurl and nghttp2 static xcframeworks built from github.com/jasonacox/Build-OpenSSL-cURL.
-    Includes libcurl and libnghttp2 for iOS, iOS Simulator, tvOS, tvOS Simulator, macOS, and Mac Catalyst.
-    Supports FTP, FTPS, HTTP, HTTPS, HTTP/2, and more protocols.
+    Pre-compiled libcurl, nghttp2 and libssh2 static xcframeworks built from github.com/jasonacox/Build-OpenSSL-cURL.
+    Includes libcurl, libnghttp2 and libssh2 for iOS, iOS Simulator, tvOS, tvOS Simulator, macOS, and Mac Catalyst.
+    Supports FTP, FTPS, SFTP, SCP, HTTP, HTTPS, HTTP/2, and more protocols.
     Requires LSOpenSSL for TLS support.
-    Does NOT include SFTP — SFTP requires libssh2 and is handled separately.
   DESC
   s.homepage         = 'https://github.com/jasonacox/Build-OpenSSL-cURL'
   s.license          = { :type => 'MIT', :text => 'curl is licensed under the MIT/X derivate license' }
   s.author           = { 'Daniel Stenberg' => 'https://curl.se', 'Jason Cox' => 'https://github.com/jasonacox' }
 
-  archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0'
-  archive_url  = "https://github.com/jasonacox/Build-OpenSSL-cURL/releases/download/1.0.3/#{archive_name}.tgz"
+  archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0-libssh2-1.11.1'
+  archive_url  = "https://github.com/everappz/Build-OpenSSL-cURL/releases/download/1.0.3.1/#{archive_name}.tgz"
 
   s.source = {
     :http => archive_url,
@@ -36,6 +35,7 @@ Pod::Spec.new do |s|
   s.vendored_frameworks = [
     "#{archive_name}/xcframework/libcurl.xcframework",
     "#{archive_name}/xcframework/libnghttp2.xcframework",
+    "#{archive_name}/xcframework/libssh2.xcframework",
   ]
 
   s.source_files        = "#{archive_name}/include/curl/**/*.h"
@@ -51,6 +51,6 @@ Pod::Spec.new do |s|
   }
 
   s.user_target_xcconfig = {
-    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/LSCurl/libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include"',
+    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/LSCurl/libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0-libssh2-1.11.1/include"',
   }
 end

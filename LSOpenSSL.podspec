@@ -11,8 +11,8 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'Apache-2.0', :text => 'OpenSSL is licensed under the Apache License 2.0' }
   s.author           = { 'Jason Cox' => 'https://github.com/jasonacox' }
 
-  archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0'
-  archive_url  = "https://github.com/jasonacox/Build-OpenSSL-cURL/releases/download/1.0.3/#{archive_name}.tgz"
+  archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0-libssh2-1.11.1'
+  archive_url  = "https://github.com/everappz/Build-OpenSSL-cURL/releases/download/1.0.3.1/#{archive_name}.tgz"
 
   s.source = {
     :http => archive_url,
@@ -47,6 +47,6 @@ Pod::Spec.new do |s|
   }
 
   s.user_target_xcconfig = {
-    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/LSOpenSSL/libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0/include"',
+    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/LSOpenSSL/libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0-libssh2-1.11.1/include"',
   }
 end
