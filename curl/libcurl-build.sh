@@ -150,6 +150,7 @@ done
 shift $((OPTIND-1))
 
 OPENSSL="${PWD}/../openssl"
+LIBSSH2="${PWD}/../libssh2"
 DEVELOPER=`xcode-select -print-path`
 
 # Semantic Version Comparison
@@ -212,16 +213,19 @@ buildMac()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/Mac/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/Mac/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/Mac/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/Mac/${ARCH}/lib"
 
 	TARGET="darwin-i386-cc"
 	BUILD_MACHINE=`uname -m`
 	export CC="clang"
 	export CFLAGS="-arch ${ARCH} -pipe -Os -gdwarf-2 -fembed-bitcode"
-	export LDFLAGS="-arch ${ARCH} -L${OPENSSL}/Mac/lib ${NGHTTP2LIB}"
+	export LDFLAGS="-arch ${ARCH} -L${OPENSSL}/Mac/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
 
 	if [[ $ARCH == "x86_64" ]]; then
 		TARGET="darwin64-x86_64-cc"
@@ -231,7 +235,7 @@ buildMac()
 			export CC="clang"
 			export CXX="clang"
 			export CFLAGS=" -mmacosx-version-min=${MACOS_X86_64_VERSION} -arch ${ARCH} -pipe -Os -gdwarf-2 -fembed-bitcode "
-			export LDFLAGS=" -arch ${ARCH} -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -L${OPENSSL}/Mac/lib ${NGHTTP2LIB} "
+			export LDFLAGS=" -arch ${ARCH} -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -L${OPENSSL}/Mac/lib ${NGHTTP2LIB} ${LIBSSH2LIB} "
 			export CPPFLAGS=" -I.. -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk "
 		else
 			# Apple x86_64 Build Machine Detected - native build
@@ -251,7 +255,7 @@ buildMac()
 			export CC="clang"
 			export CXX="clang"
 			export CFLAGS=" -mmacosx-version-min=${MACOS_ARM64_VERSION} -arch ${ARCH} -pipe -Os -gdwarf-2 -fembed-bitcode "
-			export LDFLAGS=" -arch ${ARCH} -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -L${OPENSSL}/Mac/lib ${NGHTTP2LIB} "
+			export LDFLAGS=" -arch ${ARCH} -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -L${OPENSSL}/Mac/lib ${NGHTTP2LIB} ${LIBSSH2LIB} "
 			export CPPFLAGS=" -I.. -isysroot ${DEVELOPER}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk "
 		fi
 	fi
@@ -260,7 +264,7 @@ buildMac()
 
 	pushd . > /dev/null
 	cd "${CURL_VERSION}"
-	./configure -prefix="/tmp/${CURL_VERSION}-${ARCH}" $CONF_FLAGS --with-ssl=${OPENSSL}/Mac ${NGHTTP2CFG} --host=${HOST} &> "/tmp/${CURL_VERSION}-${ARCH}.log"
+	./configure -prefix="/tmp/${CURL_VERSION}-${ARCH}" $CONF_FLAGS --with-ssl=${OPENSSL}/Mac ${NGHTTP2CFG} ${LIBSSH2CFG} --host=${HOST} &> "/tmp/${CURL_VERSION}-${ARCH}.log"
 
 	make -j${CORES} >> "/tmp/${CURL_VERSION}-${ARCH}.log" 2>&1
 	make install >> "/tmp/${CURL_VERSION}-${ARCH}.log" 2>&1
@@ -307,24 +311,27 @@ buildCatalyst()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/Catalyst/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/Catalyst/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/Catalyst/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/Catalyst/${ARCH}/lib"
 
 	export $PLATFORM
 	export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
 	export CROSS_SDK="${PLATFORM}.sdk"
 	export CC="${DEVELOPER}/usr/bin/gcc"
 	export CFLAGS="-arch ${ARCH} -pipe -Os -gdwarf-2 -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -target $TARGET ${CC_BITCODE_FLAG}"
-	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/catalyst/lib ${NGHTTP2LIB}"
+	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/catalyst/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
 
 	echo -e "${subbold}Building ${CURL_VERSION} for ${archbold}${ARCH}${dim} ${BITCODE} (Mac Catalyst iOS ${CATALYST_IOS})"
 
 	if [[ "${ARCH}" == "arm64" ]]; then
-		./configure -prefix="/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/catalyst ${NGHTTP2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/catalyst ${NGHTTP2CFG} ${LIBSSH2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log"
 	else
-		./configure -prefix="/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/catalyst ${NGHTTP2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/catalyst ${NGHTTP2CFG} ${LIBSSH2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log"
 	fi
 	
 	make -j${CORES} >> "/tmp/${CURL_VERSION}-catalyst-${ARCH}-${BITCODE}.log" 2>&1
@@ -354,10 +361,13 @@ buildIOS()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/${PLATFORMDIR}/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/${PLATFORMDIR}/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/${PLATFORMDIR}/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/${PLATFORMDIR}/${ARCH}/lib"
 
 	export $PLATFORM
 	export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
@@ -367,12 +377,12 @@ buildIOS()
 
 	echo -e "${subbold}Building ${CURL_VERSION} for ${PLATFORM} ${IOS_SDK_VERSION} ${archbold}${ARCH}${dim} ${BITCODE} (iOS ${IOS_MIN_SDK_VERSION})"
 
-	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB}"
+	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
 
 	if [[ "${ARCH}" == *"arm64"* || "${ARCH}" == "arm64e" ]]; then
-		./configure -prefix="/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} ${LIBSSH2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log"
 	else
-		./configure -prefix="/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} ${LIBSSH2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log"
 	fi
 
 	make -j${CORES} >> "/tmp/${CURL_VERSION}-iOS-${ARCH}-${BITCODE}.log" 2>&1
@@ -401,10 +411,13 @@ buildIOSsim()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/${PLATFORMDIR}/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/${PLATFORMDIR}/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/${PLATFORMDIR}/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/${PLATFORMDIR}/${ARCH}/lib"
 
 	TARGET="darwin-i386-cc"
 	RUNTARGET=""
@@ -421,15 +434,15 @@ buildIOSsim()
 	export CC="${DEVELOPER}/usr/bin/gcc"
 	export CXX="${DEVELOPER}/usr/bin/gcc"
 	export CFLAGS="-arch ${ARCH} -pipe -Os -gdwarf-2 -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=${MIPHONEOS} ${CC_BITCODE_FLAG} ${RUNTARGET} "
-	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB} "
+	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB} ${LIBSSH2LIB} "
 	export CPPFLAGS=" -I.. -isysroot ${DEVELOPER}/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk "
 
 	echo -e "${subbold}Building ${CURL_VERSION} for ${PLATFORM} ${IOS_SDK_VERSION} ${archbold}${ARCH}${dim} ${BITCODE} (iOS ${IOS_MIN_SDK_VERSION})"
 
 	if [[ "${ARCH}" == *"arm64"* || "${ARCH}" == "arm64e" ]]; then
-		./configure -prefix="/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} ${LIBSSH2CFG} --host="arm-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log"
 	else
-		./configure -prefix="/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log"
+		./configure -prefix="/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}" $CONF_FLAGS --with-ssl=${OPENSSL}/${PLATFORMDIR} ${NGHTTP2CFG} ${LIBSSH2CFG} --host="${ARCH}-apple-darwin" &> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log"
 	fi
 
 	make -j${CORES} >> "/tmp/${CURL_VERSION}-iOS-simulator-${ARCH}-${BITCODE}.log" 2>&1
@@ -461,22 +474,25 @@ buildTVOS()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/tvOS/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/tvOS/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/tvOS/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/tvOS/${ARCH}/lib"
 
 	export $PLATFORM
 	export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
 	export CROSS_SDK="${PLATFORM}${TVOS_SDK_VERSION}.sdk"
 	export CC="${DEVELOPER}/usr/bin/gcc"
 	export CFLAGS="-arch ${ARCH} -pipe -Os -gdwarf-2 -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -mtvos-version-min=${TVOS_MIN_SDK_VERSION} ${CC_BITCODE_FLAG}"
-	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/tvOS/lib ${NGHTTP2LIB}"
+	export LDFLAGS="-arch ${ARCH} -isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -L${OPENSSL}/tvOS/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
 #	export PKG_CONFIG_PATH
 
 	echo -e "${subbold}Building ${CURL_VERSION} for ${PLATFORM} ${TVOS_SDK_VERSION} ${archbold}${ARCH}${dim} (tvOS ${TVOS_MIN_SDK_VERSION})"
 
-	./configure -prefix="/tmp/${CURL_VERSION}-tvOS-${ARCH}" --host="arm-apple-darwin" $CONF_FLAGS --disable-shared -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/tvOS" ${NGHTTP2CFG} &> "/tmp/${CURL_VERSION}-tvOS-${ARCH}.log"
+	./configure -prefix="/tmp/${CURL_VERSION}-tvOS-${ARCH}" --host="arm-apple-darwin" $CONF_FLAGS --disable-shared -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/tvOS" ${NGHTTP2CFG} ${LIBSSH2CFG} &> "/tmp/${CURL_VERSION}-tvOS-${ARCH}.log"
 
 	# Patch to not use fork() since it's not available on tvOS
         LANG=C sed -i -- 's/define HAVE_FORK 1/define HAVE_FORK 0/' "./lib/curl_config.h"
@@ -509,10 +525,13 @@ buildTVOSsim()
 	if [ $nohttp2 == "1" ]; then
 		NGHTTP2CFG="--with-nghttp2=${NGHTTP2}/${PLATFORMDIR}/${ARCH}"
 		NGHTTP2LIB="-L${NGHTTP2}/${PLATFORMDIR}/${ARCH}/lib"
-	else 
+	else
 		NGHTTP2CFG="--without-nghttp2"
 		NGHTTP2LIB=""
 	fi
+
+	LIBSSH2CFG="--with-libssh2=${LIBSSH2}/${PLATFORMDIR}/${ARCH}"
+	LIBSSH2LIB="-L${LIBSSH2}/${PLATFORMDIR}/${ARCH}/lib"
 
 	TARGET="darwin64-${ARCH}-cc"
 	RUNTARGET="-target ${ARCH}-apple-tvos${TVOS_MIN_SDK_VERSION}-simulator"
@@ -522,15 +541,15 @@ buildTVOSsim()
 	export CC="${DEVELOPER}/usr/bin/gcc"
 	export CXX="${DEVELOPER}/usr/bin/gcc"
 	export CFLAGS="-arch ${ARCH} -pipe -Os -gdwarf-2 -isysroot ${SYSROOT} -mtvos-version-min=${TVOS_MIN_SDK_VERSION} ${CC_BITCODE_FLAG} ${RUNTARGET}"
-	export LDFLAGS="-arch ${ARCH} -isysroot ${SYSROOT} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB}"
+	export LDFLAGS="-arch ${ARCH} -isysroot ${SYSROOT} -L${OPENSSL}/${PLATFORMDIR}/lib ${NGHTTP2LIB} ${LIBSSH2LIB}"
 	export CPPFLAGS=" -I.. -isysroot ${SYSROOT} "
 
 	echo -e "${subbold}Building ${CURL_VERSION} for ${PLATFORM} ${TVOS_SDK_VERSION} ${archbold}${ARCH}${dim} (tvOS SIM ${TVOS_MIN_SDK_VERSION})"
 
 	if [[ "${ARCH}" == "arm64" ]]; then
-		./configure --prefix="/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}" --host="arm-apple-darwin" $CONF_FLAGS --disable-shared -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/${PLATFORMDIR}" ${NGHTTP2CFG}  &> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log"
+		./configure --prefix="/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}" --host="arm-apple-darwin" $CONF_FLAGS --disable-shared -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/${PLATFORMDIR}" ${NGHTTP2CFG} ${LIBSSH2CFG}  &> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log"
 	else
-		./configure --prefix="/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}" --host="${ARCH}-apple-darwin" $CONF_FLAGS --disable-shared  -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/${PLATFORMDIR}" ${NGHTTP2CFG}  &> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log"
+		./configure --prefix="/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}" --host="${ARCH}-apple-darwin" $CONF_FLAGS --disable-shared  -with-random=/dev/urandom --disable-ntlm-wb --with-ssl="${OPENSSL}/${PLATFORMDIR}" ${NGHTTP2CFG} ${LIBSSH2CFG}  &> "/tmp/${CURL_VERSION}-tvOS-simulator-${ARCH}.log"
 	fi
 
 	# Patch to not use fork() since it's not available on tvOS

@@ -16,6 +16,7 @@ set -e
 OPENSSL="3.0.18"	# https://www.openssl.org/source/ - LTS Version
 LIBCURL="8.17.0"	# https://curl.haxx.se/download.html
 NGHTTP2="1.68.0"	# https://nghttp2.org/
+LIBSSH2="1.11.1"	# https://github.com/libssh2/libssh2
 
 ################################################
 
@@ -166,13 +167,14 @@ echo -e "${bold}Build-OpenSSL-cURL${dim} - v$SCRIPT_VERSION"
 echo
 echo -e " - OpenSSL version: ${subbold}${OPENSSL}${dim}"
 echo -e " - cURL version:    ${subbold}${LIBCURL}${dim}"
+echo -e " - libssh2 version: ${subbold}${LIBSSH2}${dim}"
 if [ "$buildnghttp2" == "" ]; then
 	echo ""
-	echo -n "This script builds OpenSSL and libcurl for "
+	echo -n "This script builds OpenSSL, libssh2 and libcurl for "
 else
 	echo -e " - nghttp2 version: ${subbold}${NGHTTP2}${dim}"
 	echo ""
-	echo -n "This script builds OpenSSL, nghttp2 and libcurl for "
+	echo -n "This script builds OpenSSL, nghttp2, libssh2 and libcurl for "
 fi
 case "$BUILDFOR" in
 	ios) echo -e "${archbold}iOS${dim}" ;;
@@ -222,6 +224,13 @@ else
 	cd ..
 fi
 
+## Libssh2 Build
+echo
+echo -e "${bold}Building libssh2 for SFTP support${normal}"
+cd libssh2
+./libssh2-build.sh -v "$LIBSSH2" $colorflag $catalyst $OSARGS $BUILDFORARGS
+cd ..
+
 ## Curl Build
 echo
 echo -e "${bold}Building Curl${normal}"
@@ -241,10 +250,13 @@ if [ "$buildnghttp2" != "" ]; then
 	xcrun -sdk iphoneos lipo -info nghttp2/lib/*.a
 fi
 echo
+echo -e "${subbold}libssh2 (rename to libssh2.a)${normal} [${dim}$LIBSSH2${normal}]${dim}"
+xcrun -sdk iphoneos lipo -info libssh2/lib/*.a
+echo
 echo -e "${subbold}libcurl (rename to libcurl.a)${normal} [${dim}$LIBCURL${normal}]${dim}"
 xcrun -sdk iphoneos lipo -info curl/lib/*.a
 
-ARCHIVE="archive/libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2"
+ARCHIVE="archive/libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2-libssh2-$LIBSSH2"
 
 echo
 echo -e "${bold}Creating archive with XCFrameworks for release v$LIBCURL...${dim}"
@@ -268,9 +280,9 @@ mkdir -p "$ARCHIVE/xcframework"
 
 # Create a symlink of latest build
 rm -f archive/latest
-ln -s "libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2" archive/latest
+ln -s "libcurl-$LIBCURL-openssl-$OPENSSL-nghttp2-$NGHTTP2-libssh2-$LIBSSH2" archive/latest
 
-# libraries for libcurl, libcrypto and libssl
+# libraries for libcurl, libcrypto, libssl and libssh2
 if [ "$BUILDFOR" == "ios" ] || [ "$BUILDFOR" == "all" ]; then
 	# Copy iOS libraries
 	cp curl/lib/libcurl_iOS.a $ARCHIVE/lib/iOS/libcurl.a
@@ -282,6 +294,9 @@ if [ "$BUILDFOR" == "ios" ] || [ "$BUILDFOR" == "all" ]; then
 	cp openssl/iOS/lib/libssl.a $ARCHIVE/lib/iOS/libssl.a
 	cp openssl/iOS-simulator/lib/libssl.a $ARCHIVE/lib/iOS-simulator/libssl.a
 	cp openssl/iOS-fat/lib/libssl.a $ARCHIVE/lib/iOS-fat/libssl.a
+	cp libssh2/lib/libssh2_iOS.a $ARCHIVE/lib/iOS/libssh2.a
+	cp libssh2/lib/libssh2_iOS-simulator.a $ARCHIVE/lib/iOS-simulator/libssh2.a
+	cp libssh2/lib/libssh2_iOS-fat.a $ARCHIVE/lib/iOS-fat/libssh2.a
 fi
 if [ "$BUILDFOR" == "tvos" ] || [ "$BUILDFOR" == "all" ]; then
 	# Copy tvOS libraries
@@ -291,12 +306,15 @@ if [ "$BUILDFOR" == "tvos" ] || [ "$BUILDFOR" == "all" ]; then
 	cp openssl/tvOS-simulator/lib/libcrypto.a $ARCHIVE/lib/tvOS-simulator/libcrypto.a
 	cp openssl/tvOS/lib/libssl.a $ARCHIVE/lib/tvOS/libssl.a
 	cp openssl/tvOS-simulator/lib/libssl.a $ARCHIVE/lib/tvOS-simulator/libssl.a
+	cp libssh2/lib/libssh2_tvOS.a $ARCHIVE/lib/tvOS/libssh2.a
+	cp libssh2/lib/libssh2_tvOS-simulator.a $ARCHIVE/lib/tvOS-simulator/libssh2.a
 fi
 if [ "$BUILDFOR" == "macos" ] || [ "$BUILDFOR" == "all" ]; then
 	# Copy MacOS libraries
 	cp curl/lib/libcurl_Mac.a $ARCHIVE/lib/MacOS/libcurl.a
 	cp openssl/Mac/lib/libcrypto.a $ARCHIVE/lib/MacOS/libcrypto.a
 	cp openssl/Mac/lib/libssl.a $ARCHIVE/lib/MacOS/libssl.a
+	cp libssh2/lib/libssh2_Mac.a $ARCHIVE/lib/MacOS/libssh2.a
 fi
 
 if [ "$catalyst" != "" ]; then
@@ -304,6 +322,7 @@ if [ "$catalyst" != "" ]; then
 	cp curl/lib/libcurl_Catalyst.a $ARCHIVE/lib/Catalyst/libcurl.a
 	cp openssl/Catalyst/lib/libcrypto.a $ARCHIVE/lib/Catalyst/libcrypto.a
 	cp openssl/Catalyst/lib/libssl.a $ARCHIVE/lib/Catalyst/libssl.a
+	cp libssh2/lib/libssh2_Catalyst.a $ARCHIVE/lib/Catalyst/libssh2.a
 
 	# Build XCFrameworks with Catalyst library
 	xcodebuild -create-xcframework \
@@ -342,6 +361,14 @@ if [ "$catalyst" != "" ]; then
 		-library $ARCHIVE/lib/Catalyst/libssl.a \
         -library $ARCHIVE/lib/MacOS/libssl.a \
 		-output $ARCHIVE/xcframework/libssl.xcframework
+	xcodebuild -create-xcframework \
+		-library $ARCHIVE/lib/iOS/libssh2.a \
+		-library $ARCHIVE/lib/iOS-simulator/libssh2.a \
+		-library $ARCHIVE/lib/tvOS/libssh2.a \
+		-library $ARCHIVE/lib/tvOS-simulator/libssh2.a \
+		-library $ARCHIVE/lib/Catalyst/libssh2.a \
+        -library $ARCHIVE/lib/MacOS/libssh2.a \
+		-output $ARCHIVE/xcframework/libssh2.xcframework
 elif [ "$BUILDFOR" == "all" ]; then
 	# Build XCFrameworks
 	xcodebuild -create-xcframework \
@@ -375,7 +402,14 @@ elif [ "$BUILDFOR" == "all" ]; then
 		-library $ARCHIVE/lib/tvOS-simulator/libssl.a \
         -library $ARCHIVE/lib/MacOS/libssl.a \
 		-output $ARCHIVE/xcframework/libssl.xcframework
-	# openssl/openssl-ios-arm64_arm64e.a   
+	xcodebuild -create-xcframework \
+		-library $ARCHIVE/lib/iOS/libssh2.a \
+		-library $ARCHIVE/lib/iOS-simulator/libssh2.a \
+		-library $ARCHIVE/lib/tvOS/libssh2.a \
+		-library $ARCHIVE/lib/tvOS-simulator/libssh2.a \
+        -library $ARCHIVE/lib/MacOS/libssh2.a \
+		-output $ARCHIVE/xcframework/libssh2.xcframework
+	# openssl/openssl-ios-arm64_arm64e.a
 	# openssl/openssl-ios-x86_64_arm64-simulator.a
 	cp openssl/*.a $ARCHIVE/framework
 elif [ "$BUILDFOR" == "ios" ]; then
@@ -396,7 +430,11 @@ elif [ "$BUILDFOR" == "ios" ]; then
 		-library $ARCHIVE/lib/iOS/libssl.a \
 		-library $ARCHIVE/lib/iOS-simulator/libssl.a \
 		-output $ARCHIVE/xcframework/libssl.xcframework
-	# openssl/openssl-ios-arm64_arm64e.a   
+	xcodebuild -create-xcframework \
+		-library $ARCHIVE/lib/iOS/libssh2.a \
+		-library $ARCHIVE/lib/iOS-simulator/libssh2.a \
+		-output $ARCHIVE/xcframework/libssh2.xcframework
+	# openssl/openssl-ios-arm64_arm64e.a
 	# openssl/openssl-ios-x86_64_arm64-simulator.a
 	cp openssl/*.a $ARCHIVE/framework
 elif [ "$BUILDFOR" == "tvos" ]; then
@@ -417,12 +455,19 @@ elif [ "$BUILDFOR" == "tvos" ]; then
 		-library $ARCHIVE/lib/tvOS/libssl.a \
 		-library $ARCHIVE/lib/tvOS-simulator/libssl.a \
 		-output $ARCHIVE/xcframework/libssl.xcframework
+	xcodebuild -create-xcframework \
+		-library $ARCHIVE/lib/tvOS/libssh2.a \
+		-library $ARCHIVE/lib/tvOS-simulator/libssh2.a \
+		-output $ARCHIVE/xcframework/libssh2.xcframework
 elif [ "$BUILDFOR" == "macos" ]; then
 	# Build XCFrameworks
 	xcodebuild -create-xcframework \
 		-library $ARCHIVE/lib/MacOS/libcurl.a \
 		-headers curl/include \
 		-output $ARCHIVE/xcframework/libcurl.xcframework
+	xcodebuild -create-xcframework \
+		-library $ARCHIVE/lib/MacOS/libssh2.a \
+		-output $ARCHIVE/xcframework/libssh2.xcframework
 fi
 
 # libraries for nghttp2

@@ -1,0 +1,21 @@
+###########################################################################
+# libssh2 installation details
+#
+# Copyright (C) The libssh2 project and its contributors.
+# SPDX-License-Identifier: BSD-3-Clause
+###########################################################################
+
+prefix=/Users/artem/Documents/Projects/Build-OpenSSL-cURL/libssh2/../libssh2/iOS/arm64e
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libssh2
+URL: https://libssh2.org/
+Description: Library for SSH-based communication
+Version: 1.11.1
+Requires: libcrypto,zlib
+Requires.private: libcrypto,zlib
+Libs: -L${libdir} -lssh2  -L/Users/artem/Documents/Projects/Build-OpenSSL-cURL/libssh2/../openssl/iOS/lib -lssl -L/Users/artem/Documents/Projects/Build-OpenSSL-cURL/libssh2/../openssl/iOS/lib -lcrypto -lz
+Libs.private:  -L/Users/artem/Documents/Projects/Build-OpenSSL-cURL/libssh2/../openssl/iOS/lib -lssl -L/Users/artem/Documents/Projects/Build-OpenSSL-cURL/libssh2/../openssl/iOS/lib -lcrypto -lz
+Cflags: -I${includedir}
