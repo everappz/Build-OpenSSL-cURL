@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.author           = { 'Daniel Stenberg' => 'https://curl.se', 'Jason Cox' => 'https://github.com/jasonacox' }
 
   archive_name = 'libcurl-8.17.0-openssl-3.0.18-nghttp2-1.68.0-libssh2-1.11.1'
-  archive_url  = "https://github.com/everappz/Build-OpenSSL-cURL/releases/download/1.0.3.1/#{archive_name}.tgz"
+  archive_url  = "https://github.com/everappz/Build-OpenSSL-cURL/releases/download/1.0.3.2/#{archive_name}.tgz"
 
   s.source = {
     :http => archive_url,
