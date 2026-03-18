@@ -60,7 +60,7 @@ engine=""
 buildnghttp2="-n"
 disablebitcode="-b" # Default disable bitcode
 colorflag=""
-catalyst=""
+catalyst="-m"
 sslv3=""
 autobuild=""
 
